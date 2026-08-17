@@ -1,0 +1,18 @@
+{
+  "workflow": "t2va",
+  "prompt_file": "prompt.txt",
+  "num_frames": 124,
+  "height": 544,
+  "width": 960,
+  "num_inference_steps": 5,
+  "seed": 42,
+  "fps": 24,
+  "output_name": "h3_fastest",
+  "attention_backend": "sage",
+  "loras": [
+    {
+      "path": "minimax_h3_turbo_4step_ema_ckpt500_diffusers.safetensors",
+      "strength": 1.0
+    }
+  ]
+}

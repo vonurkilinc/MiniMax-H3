@@ -1,0 +1,11 @@
+{
+  "workflow": "t2va",
+  "prompt_file": "prompt.txt",
+  "num_frames": 124,
+  "height": 544,
+  "width": 960,
+  "num_inference_steps": 30,
+  "seed": 42,
+  "fps": 24,
+  "output_name": "h3_output"
+}

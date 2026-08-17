@@ -1,0 +1,22 @@
+# Generated jobs and logs
+outputs/
+logs/
+
+# Local media and large LoRA weights
+inputs/*
+!inputs/.gitkeep
+*.safetensors
+
+# GUI session state can contain private prompts and local paths
+configs/_gui_last.json
+
+# Python/editor caches
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

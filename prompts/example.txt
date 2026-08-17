@@ -1,0 +1,3 @@
+integrated_multimodal_description: [Shot 1] Cinematic, medium shot, camera static. A red fox trots through a snowy pine forest at dusk, powder snow kicking up softly under its paws. Low golden light filters between the dark trunks, catching the fox's breath in small clouds of vapor. The fox pauses, lifts its head, ears swiveling toward something off-screen right, then continues trotting left to right across the frame until it disappears behind a snow-laden pine.
+overall_soundscape: Quiet winter forest ambience with a gentle wind moving through pine branches, the rhythmic soft crunch of paws on powder snow, a single distant raven call, and a faint rustle as the fox stops to listen.
+non_diegetic_music: none.

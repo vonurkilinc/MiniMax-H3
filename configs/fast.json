@@ -1,0 +1,18 @@
+{
+  "workflow": "t2va",
+  "prompt_file": "prompt.txt",
+  "num_frames": 124,
+  "height": 544,
+  "width": 960,
+  "num_inference_steps": 9,
+  "seed": 42,
+  "fps": 24,
+  "output_name": "h3_fast",
+  "attention_backend": "sage",
+  "loras": [
+    {
+      "path": "minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors",
+      "strength": 1.0
+    }
+  ]
+}
