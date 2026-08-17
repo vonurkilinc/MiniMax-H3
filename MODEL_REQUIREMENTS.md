@@ -56,12 +56,13 @@ into each remote job automatically.
 | --- | --- | --- |
 | `minimax_h3_fl2v_turbo_8step_v1.0_bf16.safetensors` | `fast.json`, `balanced.json`, GUI default | Tested 8-step turbo LoRA; strength 1.0 |
 | `minimax_h3_turbo_4step_ema_ckpt500_diffusers.safetensors` | `fastest.json` | 4-step turbo LoRA; strength 1.0 |
-| `MiniMaxSpicy.safetensors` | Custom/local GUI session | Optional custom LoRA; strength is configured in the GUI |
+| `MiniMaxSpicy.safetensors` | Custom/local GUI session | AI Toolkit fused-layout H3 LoRA; converted automatically by the loader |
 
 The first two are preset dependencies. `MiniMaxSpicy.safetensors` is present in
 the working setup as a custom LoRA but is not referenced by a checked-in
-preset. Do not rename the files unless you also update the corresponding JSON
-configuration.
+preset. Its native `qkv_proj` tensors are split into Diffusers Q/K/V modules at
+load time. Do not rename the files unless you also update the corresponding
+JSON configuration.
 
 ## Python dependencies
 

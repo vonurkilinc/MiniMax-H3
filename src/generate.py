@@ -25,6 +25,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import time
@@ -49,6 +50,38 @@ TRANSFORMER_NO_QUANT = [
 ENCODER_NO_QUANT = [
     "model.visual", "model.language_model.embed_tokens", "model.language_model.norm", "lm_head",
 ]
+
+
+_AI_TOOLKIT_LORA_RE = re.compile(
+    r"^diffusion_model\.(?:(blocks)\.(\d+)|(token_refiner\.blocks)\.(\d+))\."
+    r"(attn\.qkv_proj|attn\.out_proj|mlp\.fc1|mlp\.fc2)$"
+)
+
+
+def lora_target_modules(fqn: str) -> tuple[str, ...]:
+    """Map AI Toolkit's native MiniMax-H3 names to Diffusers modules.
+
+    AI Toolkit stores attention Q/K/V as one fused ``qkv_proj`` LoRA. The
+    returned three targets tell the loader to share/split its A/B matrices
+    across Diffusers' separate projections. Other known layouts pass through.
+    """
+    match = _AI_TOOLKIT_LORA_RE.fullmatch(fqn)
+    if not match:
+        return (fqn,)
+
+    if match.group(1):
+        prefix = f"transformer_blocks.{match.group(2)}"
+    else:
+        prefix = f"token_refiner.refiner_blocks.{match.group(4)}"
+    suffix = match.group(5)
+    if suffix == "attn.qkv_proj":
+        return tuple(f"{prefix}.attn.to_{kind}" for kind in ("q", "k", "v"))
+    mapped_suffix = {
+        "attn.out_proj": "attn.to_out.0",
+        "mlp.fc1": "ff.net.0.proj",
+        "mlp.fc2": "ff.net.2",
+    }[suffix]
+    return (f"{prefix}.{mapped_suffix}",)
 
 
 def int8_config():
@@ -79,12 +112,10 @@ def apply_loras(transformer, lora_specs, in_dir: Path):
 
     No official H3 LoRAs exist yet; this accepts the two common safetensors
     conventions (diffusers `lora_down/lora_up`, PEFT `lora_A/lora_B`, optional
-    per-layer `alpha`), matched to modules by fully-qualified name. The delta
-    is computed in bf16 on top of the int8-quantized base weights and is
-    registered as a child module, so block-level CPU offload carries it along.
+    per-layer `alpha`) plus AI Toolkit's native MiniMax-H3 layout. The delta is
+    computed in bf16 on top of the int8-quantized base weights and is registered
+    as a child module, so block-level CPU offload carries it along.
     """
-    import re
-
     import safetensors.torch as st
     import torch
 
@@ -112,18 +143,43 @@ def apply_loras(transformer, lora_specs, in_dir: Path):
             raise FileNotFoundError(f"LoRA file not found in job inputs: {spec['path']}")
         strength = float(spec.get("strength", 1.0))
         pairs, alphas = {}, {}
+        converted_sources = set()
         with st.safe_open(str(path), framework="pt") as f:
             meta = f.metadata() or {}
             for k in f.keys():
                 m = key_re.match(k)
                 if m:
-                    fqn, kind = m.group(1), m.group(2)
+                    source_fqn, kind = m.group(1), m.group(2)
                     side = "A" if kind in ("lora_down", "lora_A") else "B"
-                    pairs.setdefault(fqn, {})[side] = f.get_tensor(k)
+                    targets = lora_target_modules(source_fqn)
+                    tensor = f.get_tensor(k)
+                    if targets != (source_fqn,):
+                        converted_sources.add(source_fqn)
+                    if len(targets) == 3 and side == "B":
+                        if tensor.ndim != 2 or tensor.shape[0] % 3:
+                            raise ValueError(
+                                f"LoRA {spec['path']}: fused QKV tensor {k} has invalid "
+                                f"shape {tuple(tensor.shape)}"
+                            )
+                        tensors = tuple(chunk.contiguous() for chunk in tensor.chunk(3, dim=0))
+                    elif len(targets) == 3:
+                        # Each projection becomes its own child module/offload
+                        # unit, so do not leave their A parameters sharing storage.
+                        tensors = tuple(tensor.clone() for _ in targets)
+                    else:
+                        tensors = (tensor,)
+                    for target, target_tensor in zip(targets, tensors):
+                        pairs.setdefault(target, {})[side] = target_tensor
                 else:
                     m2 = alpha_re.match(k)
                     if m2:
-                        alphas[m2.group(1)] = float(f.get_tensor(k))
+                        for target in lora_target_modules(m2.group(1)):
+                            alphas[target] = float(f.get_tensor(k))
+        if converted_sources:
+            log.info(
+                "LoRA %s: converted %d AI Toolkit native/fused modules to Diffusers layout",
+                spec["path"], len(converted_sources),
+            )
         # global alpha from file metadata (e.g. lightx2v turbo: alpha=8) is the
         # fallback when no per-layer alpha keys exist
         global_alpha = float(meta["alpha"]) if "alpha" in meta else None
@@ -147,7 +203,7 @@ def apply_loras(transformer, lora_specs, in_dir: Path):
         if applied == 0:
             raise ValueError(
                 f"LoRA {spec['path']}: no keys matched transformer modules. "
-                "Expected diffusers (lora_down/lora_up) or PEFT (lora_A/lora_B) key layout."
+                "Expected Diffusers/PEFT or AI Toolkit MiniMax-H3 key layout."
             )
 
 
