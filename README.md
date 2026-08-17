@@ -76,3 +76,6 @@ python -m pip install imageio-ffmpeg
 
 The inputs should use compatible video/audio codecs for the fast stream-copy
 join. The clips are joined in the order shown in the list.
+
+See [MODEL_REQUIREMENTS.md](MODEL_REQUIREMENTS.md) for the complete base
+checkpoint, LoRA, and Python dependency inventory.

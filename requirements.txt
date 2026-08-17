@@ -1,0 +1,24 @@
+# Remote Ubuntu GPU environment (tested with CUDA 12.4 and Python 3.10).
+# The Windows GUI itself uses only the Python standard library and Tkinter.
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0
+torchvision==0.21.0
+
+# MiniMax-H3 support is currently on diffusers main, not the stable release.
+git+https://github.com/huggingface/diffusers.git
+transformers>=4.57
+accelerate>=1.0
+safetensors
+sentencepiece
+protobuf
+einops
+av
+imageio
+imageio-ffmpeg
+pillow
+numpy
+psutil
+huggingface_hub
+hf_transfer
+torchao==0.15.0
+sageattention==1.0.6
