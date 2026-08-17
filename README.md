@@ -25,19 +25,14 @@ Requirements on the Windows controller:
 - PowerShell 5.1 or newer
 - OpenSSH (`ssh` and `scp`)
 
-Set the target server, then provision it:
+The default target server is already configured in `run-remote.ps1`. Then provision it:
 
 ```powershell
-$env:H3_SERVER = "user@gpu-server"
 .\run-remote.ps1 -Provision
 .\run-remote.ps1 -DownloadModel
 ```
 
-`-Server user@host` can be supplied directly for command-line runs. The GUI
-inherits `H3_SERVER` from the shell used to launch it.
-
-For a persistent local-only setting, put the server address in
-`configs/server.local.txt`; that file is ignored by Git.
+`-Server user@host` can be supplied directly for command-line runs.
 
 For Ref2VA support, download the additional transformer partition:
 
