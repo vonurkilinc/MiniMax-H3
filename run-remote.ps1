@@ -35,6 +35,12 @@ $JobDir = "/dev/shm/h3-job"
 $ProvDir = "/dev/shm/h3-provision"
 
 if ([string]::IsNullOrWhiteSpace($Server)) {
+  $localServerFile = Join-Path $Root "configs\server.local.txt"
+  if (Test-Path -LiteralPath $localServerFile) {
+    $Server = (Get-Content -LiteralPath $localServerFile -Raw).Trim()
+  }
+}
+if ([string]::IsNullOrWhiteSpace($Server)) {
   throw "No GPU server configured. Pass -Server user@host or set H3_SERVER."
 }
 

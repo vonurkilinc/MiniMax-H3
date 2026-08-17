@@ -36,6 +36,9 @@ $env:H3_SERVER = "user@gpu-server"
 `-Server user@host` can be supplied directly for command-line runs. The GUI
 inherits `H3_SERVER` from the shell used to launch it.
 
+For a persistent local-only setting, put the server address in
+`configs/server.local.txt`; that file is ignored by Git.
+
 For Ref2VA support, download the additional transformer partition:
 
 ```powershell
@@ -60,3 +63,21 @@ are returned under `outputs/<job-name>/`.
 
 Generated outputs, logs, local GUI session state, input media, and model/LoRA
 weights are intentionally excluded from version control.
+
+## Simple video joiner
+
+To concatenate existing clips in a small standalone window:
+
+```powershell
+python video_joiner.py
+```
+
+The joiner needs `ffmpeg` on `PATH`. If it is not installed system-wide, the
+GUI can use the Python bundle from:
+
+```powershell
+python -m pip install imageio-ffmpeg
+```
+
+The inputs should use compatible video/audio codecs for the fast stream-copy
+join. The clips are joined in the order shown in the list.

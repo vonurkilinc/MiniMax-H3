@@ -1,6 +1,10 @@
 # Generated jobs and logs
 outputs/
 logs/
+*.mp4
+*.mov
+*.mkv
+*.webm
 
 # Local media and large LoRA weights
 inputs/*
@@ -9,6 +13,7 @@ inputs/*
 
 # GUI session state can contain private prompts and local paths
 configs/_gui_last.json
+configs/server.local.txt
 
 # Python/editor caches
 __pycache__/
